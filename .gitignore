@@ -183,3 +183,4 @@ dist
 # yarn v2
 
 /.idea/
+/service-account.json
