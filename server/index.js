@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 
 // Postgres Client Setup
 const { Pool } = require('pg');
-const pgClient = new Pool({
+const pgPool = new Pool({
   user: keys.pgUser,
   host: keys.pgHost,
   database: keys.pgDatabase,
@@ -19,8 +19,8 @@ const pgClient = new Pool({
   port: keys.pgPort,
 });
 
-pgClient.on('connect', () => {
-  pgClient
+pgPool.on('connect', (client) => {
+  client
     .query('CREATE TABLE IF NOT EXISTS values (number INT)')
     .catch((err) => console.log(err));
 });
@@ -41,7 +41,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/values/all', async (req, res) => {
-  const values = await pgClient.query('SELECT * from values');
+  const values = await pgPool.query('SELECT * from values');
 
   res.send(values.rows);
 });
@@ -61,7 +61,7 @@ app.post('/values', async (req, res) => {
 
   redisClient.hset('values', index, 'Nothing yet!');
   redisPublisher.publish('insert', index);
-  pgClient.query('INSERT INTO values(number) VALUES($1)', [index]);
+  pgPool.query('INSERT INTO values(number) VALUES($1)', [index]);
 
   res.send({ working: true });
 });
